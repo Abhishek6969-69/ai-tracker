@@ -1,13 +1,14 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/get-session-user";
 import { createLearningSchema } from "@/lib/validators/learning";
 
 export async function PUT(
-  req: Request,
-  { params }: { params: { id: string } }
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params;
     const user = await getSessionUser();
     if (!user.email) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -17,7 +18,7 @@ export async function PUT(
 
     const updated = await prisma.learningItem.updateMany({
       where: {
-        id: params.id,
+        id,
         user: {
           email: user.email,
         },
@@ -46,10 +47,11 @@ export async function PUT(
 }
 
 export async function DELETE(
-  _: Request,
-  { params }: { params: { id: string } }
+  _req: NextRequest,
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params;
     const user = await getSessionUser();
     if (!user.email) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -57,7 +59,7 @@ export async function DELETE(
 
     const deleted = await prisma.learningItem.deleteMany({
       where: {
-        id: params.id,
+        id,
         user: {
           email: user.email,
         },
